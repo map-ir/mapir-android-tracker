@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ir.map.mapirlivetracking">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application>
+        <receiver android:name=".Publisher$ReceiverCall" >
+            <intent-filter>
+                <action android:name="LiveTrackingServiceError" />
+                <action android:name="LiveTrackingServiceInfo" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".PublisherService"
+            android:enabled="true"
+            android:exported="true"/>
+
+        <service android:name="org.eclipse.paho.android.service.MqttService"/>
+    </application>
+
+</manifest>

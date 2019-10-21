@@ -1,0 +1,2 @@
+include ':app', ':mapirlivetracking'
+rootProject.name='LiveTrackingSample'

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package tutorial;
+
+message LiveV1 {
+  repeated double location = 1;
+  string rtimestamp = 2;
+  float direction = 3;
+  double speed = 4;
+}
