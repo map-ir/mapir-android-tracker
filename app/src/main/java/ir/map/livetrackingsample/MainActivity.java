@@ -21,7 +21,6 @@ import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
-import com.mapbox.mapboxsdk.style.sources.Source;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -44,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private MapboxMap map;
     private MapView mapView;
     private Style loadedStyle;
-    private String topic = "01";
+    private String topic = "sample-unique-identifier-test";
     private GeoJsonSource source;
     private SymbolLayer symbolLayer;
     private ValueAnimator animator;
@@ -186,12 +185,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             loadedStyle.addImage(topic, Objects.requireNonNull(AppCompatResources.getDrawable(getBaseContext(), R.drawable.mapbox_marker_icon_default)));
 
             // Publisher
-            publisher = Publisher.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, true, this);
-            publisher.start(1000);
+//            publisher = Publisher.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, true, this);
+//            publisher.start(1000);
 
             // Subscriber
-//            subscriber = Subscriber.getLiveTracker(getBaseContext(), getString(R.string.access_token), "01", this);
-//            subscriber.connect();
+            subscriber = Subscriber.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, this);
+            subscriber.start();
         });
     }
 }

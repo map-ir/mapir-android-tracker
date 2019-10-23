@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application>
-        <receiver android:name=".Publisher$ReceiverCall" >
+        <receiver android:name=".Publisher$LiveBroadcastReceiver">
             <intent-filter>
                 <action android:name="LiveTrackingServiceError" />
                 <action android:name="LiveTrackingServiceInfo" />

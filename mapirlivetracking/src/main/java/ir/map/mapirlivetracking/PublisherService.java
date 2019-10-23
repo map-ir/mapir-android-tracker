@@ -125,47 +125,49 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     }
 
     private void connectMqtt() {
-        if (mqttConnectRetryCount < 3) {
-            try {
+        if (!mqttClient.isConnected()) {
+            if (mqttConnectRetryCount < 3) {
+                try {
 //                MqttConnectOptions options = new MqttConnectOptions();
 //                options.setUserName(username);
 //                options.setPassword(password.toCharArray());
-                mqttClient.connect().setActionCallback(new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        mqttConnectRetryCount = 0;
+                    mqttClient.connect().setActionCallback(new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                            mqttConnectRetryCount = 0;
 
-                        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(PublisherService.this);
+                            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(PublisherService.this);
 
-                        locationRequest = LocationRequest.create();
-                        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                        locationRequest.setInterval(interval);
-                        locationRequest.setFastestInterval(interval);
+                            locationRequest = LocationRequest.create();
+                            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                            locationRequest.setInterval(interval);
+                            locationRequest.setFastestInterval(interval);
 
-                        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                if (mqttClient.isConnected()) {
-                                    if (location != null) {
-                                        publish(location);
+                            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                                @Override
+                                public void onSuccess(Location location) {
+                                    if (mqttClient.isConnected()) {
+                                        if (location != null) {
+                                            publish(location);
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
 
-                        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
-                    }
+                            mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+                        }
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        mqttConnectRetryCount++;
-                        connectMqtt();
-                    }
-                });
-            } catch (MqttException e) {
-                mqttConnectRetryCount++;
-                Log.e("LIVE_TRACKER", e.getMessage());
-                connectMqtt();
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                            mqttConnectRetryCount++;
+                            connectMqtt();
+                        }
+                    });
+                } catch (MqttException e) {
+                    mqttConnectRetryCount++;
+                    Log.e("LIVE_TRACKER", e.getMessage());
+                    connectMqtt();
+                }
             }
         }
     }
@@ -278,18 +280,10 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
                         Dataformat.LiveV1.newBuilder()
                                 .setDirection(location.getBearing())
                                 .addAllLocation(locations)
-                                .setRtimestamp(String.valueOf(System.currentTimeMillis()))
+                                .setRtimestamp(String.valueOf(location.getTime()))
                                 .setSpeed(location.getSpeed())
                                 .build()
                                 .toByteArray()));
-
-                if (shouldRestart) {
-                    Intent intent = new Intent(BROADCAST_INFO_ACTION_NAME);
-                    intent.putExtra("restart", shouldRestart);
-                    intent.putExtra("interval", interval);
-                    intent.putExtra("topic", topic);
-                    sendBroadcast(intent);
-                }
 
             } catch (MqttException e) {
                 e.printStackTrace();
@@ -309,7 +303,7 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
             intent.putExtra("topic", topic);
             sendBroadcast(intent);
         }
-//        super.onTaskRemoved(rootIntent);
+        super.onTaskRemoved(rootIntent);
     }
 
     public void startForeground() {

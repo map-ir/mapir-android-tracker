@@ -35,8 +35,9 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
 
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
-
     implementation project(path: ':mapirlivetracking')
+
+//    implementation project(path: ':mapirlivetracking')
 
 }
 //apply plugin: 'com.google.gms.google-services'
