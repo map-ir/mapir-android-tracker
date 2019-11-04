@@ -1,6 +1,6 @@
-package ir.map.mapirlivetracking.network;
+package ir.map.tracker.network;
 
-import ir.map.mapirlivetracking.network.model.Register;
+import ir.map.tracker.network.model.Register;
 
 public interface MapirRegistrationResponseListener {
 

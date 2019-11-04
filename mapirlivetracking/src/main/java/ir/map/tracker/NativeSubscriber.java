@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,13 +15,12 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import ir.map.mapirlivetracking.network.MapirSubscriptionResponseListener;
-import ir.map.mapirlivetracking.network.model.Subscription;
+import ir.map.tracker.network.MapirSubscriptionResponseListener;
+import ir.map.tracker.network.model.Subscription;
 import tutorial.Dataformat;
 
-import static ir.map.mapirlivetracking.Constants.BROKER_SERVER_URL;
-import static ir.map.mapirlivetracking.LiveTrackerError.CONNECTION_LOST;
-import static ir.map.mapirlivetracking.LiveTrackerError.INITIALIZE_ERROR;
+import static ir.map.tracker.Constants.BROKER_SERVER_URL;
+import static ir.map.tracker.LiveTrackerError.INITIALIZE_ERROR;
 
 class NativeSubscriber implements MqttCallback, MapirSubscriptionResponseListener {
 
@@ -106,8 +105,11 @@ class NativeSubscriber implements MqttCallback, MapirSubscriptionResponseListene
                     }
                 });
             } catch (MqttException e) {
+                trackerSubscribeListener.onFailure(INITIALIZE_ERROR);
                 e.printStackTrace();
             }
+        } else {
+            trackerSubscribeListener.onFailure(INITIALIZE_ERROR);
         }
     }
 
@@ -120,7 +122,8 @@ class NativeSubscriber implements MqttCallback, MapirSubscriptionResponseListene
 
     private void subscribe() {
         try {
-            client.subscribe(subscription.getData().getTopic(), 0);
+            if (client != null)
+                client.subscribe(subscription.getData().getTopic(), 0);
         } catch (MqttException e) {
             trackerSubscribeListener.onFailure(INITIALIZE_ERROR);
         }
@@ -128,7 +131,7 @@ class NativeSubscriber implements MqttCallback, MapirSubscriptionResponseListene
 
     void stop() {
         shouldStart = false;
-        if (client.isConnected()) {
+        if (client != null && client.isConnected()) {
             try {
                 client.disconnect();
             } catch (MqttException e) {
@@ -147,6 +150,6 @@ class NativeSubscriber implements MqttCallback, MapirSubscriptionResponseListene
     @Override
     public void onSubscribeFailure(Throwable error) {
         isSubscriberReady = false;
-        trackerSubscribeListener.onFailure(CONNECTION_LOST);
+        trackerSubscribeListener.onFailure(INITIALIZE_ERROR);
     }
 }

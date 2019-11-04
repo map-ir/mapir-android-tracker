@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.Manifest;
 import android.content.Context;

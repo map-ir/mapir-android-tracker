@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking.network.model;
+package ir.map.tracker.network.model;
 
 public class Data {
 

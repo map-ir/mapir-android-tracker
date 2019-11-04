@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ir.map.mapirlivetracking">
+    package="ir.map.tracker">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application>
-        <receiver android:name=".Publisher$LiveBroadcastReceiver">
+        <receiver android:name="ir.map.tracker.Publisher$LiveBroadcastReceiver">
             <intent-filter>
                 <action android:name="LiveTrackingServiceError" />
                 <action android:name="LiveTrackingServiceInfo" />
@@ -18,7 +18,7 @@
         </receiver>
 
         <service
-            android:name=".PublisherService"
+            android:name="ir.map.tracker.PublisherService"
             android:enabled="true"
             android:exported="true"/>
 

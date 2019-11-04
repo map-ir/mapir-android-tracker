@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -38,10 +38,10 @@ import java.util.List;
 
 import tutorial.Dataformat;
 
-import static ir.map.mapirlivetracking.Constants.BROADCAST_ERROR_ACTION_NAME;
-import static ir.map.mapirlivetracking.Constants.BROADCAST_INFO_ACTION_NAME;
-import static ir.map.mapirlivetracking.Constants.BROKER_SERVER_URL;
-import static ir.map.mapirlivetracking.LiveTrackerError.CONNECTION_LOST;
+import static ir.map.tracker.Constants.BROADCAST_ERROR_ACTION_NAME;
+import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
+import static ir.map.tracker.Constants.BROKER_SERVER_URL;
+import static ir.map.tracker.LiveTrackerError.CONNECTION_LOST;
 
 public class PublisherService extends Service implements MqttCallback, IMqttActionListener {
 
@@ -195,12 +195,23 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     @Override
     public void onDestroy() {
         removeLocationUpdate();
+        disconnectMqtt();
         if (shouldRestart) {
             Intent intent = new Intent(BROADCAST_INFO_ACTION_NAME);
             intent.putExtra("restart", shouldRestart);
             intent.putExtra("interval", interval);
             intent.putExtra("topic", topic);
             sendBroadcast(intent);
+        }
+    }
+
+    private void disconnectMqtt() {
+        if (mqttClient != null) {
+            try {
+                mqttClient.disconnect();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -248,6 +259,8 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
             mqttConnectRetryCount++;
             connectMqtt();
         } else {
+            disconnectMqtt();
+            removeLocationUpdate();
             Intent intent = new Intent(BROADCAST_ERROR_ACTION_NAME);
             intent.putExtra("mode", "error");
             intent.putExtra("status", CONNECTION_LOST);
@@ -296,6 +309,7 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         removeLocationUpdate();
+        disconnectMqtt();
         if (shouldRestart) {
             Intent intent = new Intent(BROADCAST_INFO_ACTION_NAME);
             intent.putExtra("restart", shouldRestart);
@@ -312,12 +326,13 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     }
 
     private void stopForeground() {
+        removeLocationUpdate();
+        disconnectMqtt();
         stopForeground(true);
     }
 
     private NotificationCompat.Builder createBuilderNotification() {
-        return new NotificationCompat.Builder(this, "live")
-                .setContentText("Content Text Service");
+        return new NotificationCompat.Builder(this, "mapir-tracker")
+                .setContentText("Tracking");
     }
-
 }

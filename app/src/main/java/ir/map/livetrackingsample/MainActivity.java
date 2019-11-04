@@ -28,10 +28,10 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.TimeZone;
 
-import ir.map.mapirlivetracking.LiveTrackerError;
-import ir.map.mapirlivetracking.Publisher;
-import ir.map.mapirlivetracking.Subscriber;
-import ir.map.mapirlivetracking.TrackerEvent;
+import ir.map.tracker.LiveTrackerError;
+import ir.map.tracker.Publisher;
+import ir.map.tracker.Subscriber;
+import ir.map.tracker.TrackerEvent;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconRotate;
 
@@ -62,9 +62,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onFailure(LiveTrackerError code) {
         switch (code) {
-            case CONNECTION_LOST:
-
-                break;
             case LOCATION_PERMISSION:
 
                 break;
@@ -185,8 +182,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             loadedStyle.addImage(topic, Objects.requireNonNull(AppCompatResources.getDrawable(getBaseContext(), R.drawable.mapbox_marker_icon_default)));
 
             // Publisher
-//            publisher = Publisher.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, true, this);
-//            publisher.start(1000);
+            publisher = Publisher.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, true, this);
+            publisher.start(1000);
 
             // Subscriber
             subscriber = Subscriber.getLiveTracker(getBaseContext(), getString(R.string.access_token), topic, this);

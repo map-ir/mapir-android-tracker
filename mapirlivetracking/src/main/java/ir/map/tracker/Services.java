@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
@@ -14,18 +14,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import ir.map.mapirlivetracking.network.MapirRegistrationResponseListener;
-import ir.map.mapirlivetracking.network.MapirSubscriptionResponseListener;
-import ir.map.mapirlivetracking.network.model.Data;
-import ir.map.mapirlivetracking.network.model.Register;
-import ir.map.mapirlivetracking.network.model.Subscription;
+import ir.map.tracker.network.MapirRegistrationResponseListener;
+import ir.map.tracker.network.MapirSubscriptionResponseListener;
+import ir.map.tracker.network.model.Data;
+import ir.map.tracker.network.model.Register;
+import ir.map.tracker.network.model.Subscription;
 
-import static ir.map.mapirlivetracking.Constants.SERVER_URL;
+import static ir.map.tracker.Constants.SERVER_URL;
 
 class Services {
     private MapirRegistrationResponseListener registrationResponseListener;

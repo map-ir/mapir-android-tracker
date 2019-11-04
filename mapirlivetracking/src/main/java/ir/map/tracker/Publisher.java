@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -11,22 +11,23 @@ import android.content.IntentFilter;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 
-import static ir.map.mapirlivetracking.Constants.BROADCAST_ERROR_ACTION_NAME;
-import static ir.map.mapirlivetracking.Constants.BROADCAST_INFO_ACTION_NAME;
-import static ir.map.mapirlivetracking.LiveTrackerError.ACCESS_TOKEN_NOT_AVAILABLE;
+import static ir.map.tracker.Constants.BROADCAST_ERROR_ACTION_NAME;
+import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
+import static ir.map.tracker.LiveTrackerError.ACCESS_TOKEN_NOT_AVAILABLE;
 
 public class Publisher {
 
-    private boolean shouldRestart = true;
+    private static boolean shouldRestart = true;
     private boolean shouldRunInBackground = false;
     private int interval = 10000;
     private Context context;
-
+    private static TrackerEvent.PublishListener trackerPublishListener;
     private NativePublisher nativePublisher;
 
     private Publisher(Context context, @NonNull String xApiKey, @NonNull String trackId, boolean shouldRunInBackground, TrackerEvent.PublishListener trackerPublishListener) {
         this.shouldRunInBackground = shouldRunInBackground;
         this.context = context;
+        this.trackerPublishListener = trackerPublishListener;
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BROADCAST_INFO_ACTION_NAME);
         intentFilter.addAction(BROADCAST_ERROR_ACTION_NAME);
@@ -86,7 +87,7 @@ public class Publisher {
         return nativePublisher.isTrackerReady();
     }
 
-    private boolean isLiveServiceRunning() {
+    private static boolean isLiveServiceRunning(Context context) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (PublisherService.class.getName().equals(service.service.getClassName())) {
@@ -96,7 +97,7 @@ public class Publisher {
         return false;
     }
 
-    public class LiveBroadcastReceiver extends BroadcastReceiver {
+    public static class LiveBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction() != null) {
@@ -107,13 +108,22 @@ public class Publisher {
                                 Intent startIntent = new Intent(context, PublisherService.class);
                                 intent.putExtra("interval", intent.getIntExtra("interval", 1000));
                                 intent.putExtra("topic", intent.getStringExtra("topic"));
-                                if (!isLiveServiceRunning())
+                                if (!isLiveServiceRunning(context))
                                     context.startService(startIntent);
                             }
                         }
 
                         break;
                     case BROADCAST_ERROR_ACTION_NAME:
+                        if (intent.hasExtra("mode")) {
+                            if (intent.hasExtra("status")) {
+                                switch ((LiveTrackerError) intent.getSerializableExtra("status")) {
+                                    case CONNECTION_LOST:
+                                        trackerPublishListener.onLiveTrackerDisconnected();
+                                        break;
+                                }
+                            }
+                        }
                         break;
                 }
             }

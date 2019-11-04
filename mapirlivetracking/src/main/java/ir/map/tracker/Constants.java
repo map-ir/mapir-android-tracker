@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 class Constants {
     static final String BROKER_SERVER_URL = "tcp://dev.map.ir:1883";

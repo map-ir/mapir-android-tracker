@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name="ir.map.mapirlivetracking.PublisherService"
+            android:name="ir.map.tracker.PublisherService"
             android:enabled="true" />
 
     </application>

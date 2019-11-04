@@ -1,4 +1,4 @@
-package ir.map.mapirlivetracking;
+package ir.map.tracker;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -9,11 +9,12 @@ import android.telephony.TelephonyManager;
 
 import androidx.core.content.ContextCompat;
 
-import ir.map.mapirlivetracking.network.MapirRegistrationResponseListener;
-import ir.map.mapirlivetracking.network.model.Register;
+import ir.map.tracker.network.MapirRegistrationResponseListener;
+import ir.map.tracker.network.model.Register;
 
-import static ir.map.mapirlivetracking.LiveTrackerError.INITIALIZE_ERROR;
-import static ir.map.mapirlivetracking.LiveTrackerError.LOCATION_PERMISSION;
+import static ir.map.tracker.LiveTrackerError.INITIALIZE_ERROR;
+import static ir.map.tracker.LiveTrackerError.LOCATION_PERMISSION;
+import static ir.map.tracker.LiveTrackerError.TELEPHONY_PERMISSION;
 
 class NativePublisher implements MapirRegistrationResponseListener {
 
@@ -22,7 +23,6 @@ class NativePublisher implements MapirRegistrationResponseListener {
     private String trackId;
     private boolean isTrackerReady = false;
     private boolean shouldRunInBackground = false;
-    private String deviceId;
     private int interval = 10000;
     private TrackerEvent.PublishListener trackerPublishListener;
     private boolean shouldRestart = true;
@@ -40,8 +40,13 @@ class NativePublisher implements MapirRegistrationResponseListener {
 
     @SuppressLint({"MissingPermission", "HardwareIds"})
     private void init() {
-        deviceId = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-        new Services().registerClient(xApiKey, deviceId, trackId, this);
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            trackerPublishListener.onFailure(TELEPHONY_PERMISSION);
+        } else {
+            String deviceId = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+            new Services().registerClient(xApiKey, deviceId, trackId, this);
+        }
     }
 
     @Override
