@@ -12,10 +12,6 @@
 </p>
 
 
- [ ![Download](https://api.bintray.com/packages/shivehmapco/Tracker/ir.map.tracker/images/download.svg) ](https://bintray.com/shivehmapco/Tracker/ir.map.tracker/_latestVersion)  [![API](https://img.shields.io/badge/API-14%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=14)
-
-
-
 # MapirLiveTracker
 
 <p align="center">
