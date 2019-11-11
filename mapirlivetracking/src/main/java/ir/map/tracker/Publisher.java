@@ -1,47 +1,45 @@
 package ir.map.tracker;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 
 import static ir.map.tracker.Constants.BROADCAST_ERROR_ACTION_NAME;
 import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
-import static ir.map.tracker.LiveTrackerError.ACCESS_TOKEN_NOT_AVAILABLE;
+import static ir.map.tracker.Constants.CONNECTION_LOST;
+import static ir.map.tracker.Constants.DEFAULT_INTERVAL;
+import static ir.map.tracker.ServiceHelper.isLiveServiceRunning;
 
 public class Publisher {
 
     private static boolean shouldRestart = true;
-    private boolean shouldRunInBackground = false;
-    private int interval = 10000;
-    private Context context;
-    private static TrackerEvent.PublishListener trackerPublishListener;
+    private static TrackerEvent.PublishListener publishListener;
+    private boolean runInBackground;
+    private int interval = DEFAULT_INTERVAL;
     private NativePublisher nativePublisher;
 
-    private Publisher(Context context, @NonNull String xApiKey, @NonNull String trackId, boolean shouldRunInBackground, TrackerEvent.PublishListener trackerPublishListener) {
-        this.shouldRunInBackground = shouldRunInBackground;
-        this.context = context;
-        this.trackerPublishListener = trackerPublishListener;
+    private Publisher(Context context, @NonNull String xApiKey, @NonNull String trackId, boolean runInBackground, TrackerEvent.PublishListener publishListener) {
+        this.runInBackground = runInBackground;
+        Publisher.publishListener = publishListener;
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BROADCAST_INFO_ACTION_NAME);
         intentFilter.addAction(BROADCAST_ERROR_ACTION_NAME);
         context.registerReceiver(new LiveBroadcastReceiver(), intentFilter);
-        nativePublisher = new NativePublisher(context, xApiKey, trackId, shouldRunInBackground, trackerPublishListener);
+        nativePublisher = new NativePublisher(context, xApiKey, trackId, runInBackground, publishListener);
     }
 
-    @SuppressLint("HardwareIds")
     @RequiresPermission(allOf = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.ACCESS_FINE_LOCATION})
-    public static Publisher getLiveTracker(@NonNull Context context, @NonNull String token, @NonNull String trackId, boolean shouldRunInBackground, @NonNull TrackerEvent.PublishListener trackerPublishListener) {
-        if (token == null || token.isEmpty())
-            trackerPublishListener.onFailure(ACCESS_TOKEN_NOT_AVAILABLE);
+    public static Publisher getLiveTracker(@NonNull Context context, @NonNull String apiKey, @NonNull String trackId, boolean runInBackground, @NonNull TrackerEvent.PublishListener trackerPublishListener) {
+        if (apiKey == null || apiKey.isEmpty())
+            trackerPublishListener.onFailure(PublisherError.API_KEY_NOT_AVAILABLE);
         else
-            return new Publisher(context, token, trackId, shouldRunInBackground, trackerPublishListener);
+            return new Publisher(context, apiKey, trackId, runInBackground, trackerPublishListener);
         return null;
     }
 
@@ -56,6 +54,14 @@ public class Publisher {
     }
 
     /**
+     * Stop LiveTracking Engine.
+     */
+    public void stop() {
+        shouldRestart = false;
+        nativePublisher.stop();
+    }
+
+    /**
      * Start LiveTracking Engine.
      */
     public void start() {
@@ -63,7 +69,7 @@ public class Publisher {
     }
 
     public void onPause() {
-        if (!shouldRunInBackground)
+        if (!runInBackground)
             nativePublisher.stop();
     }
 
@@ -73,28 +79,10 @@ public class Publisher {
     }
 
     /**
-     * Stop LiveTracking Engine.
-     */
-    public void stop() {
-        shouldRestart = false;
-        nativePublisher.stop();
-    }
-
-    /**
      * Return true if LiveTracking is ready to start.
      */
-    public boolean isTrackerReady() {
-        return nativePublisher.isTrackerReady();
-    }
-
-    private static boolean isLiveServiceRunning(Context context) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (PublisherService.class.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
+    public boolean isReady() {
+        return nativePublisher.isReady();
     }
 
     public static class LiveBroadcastReceiver extends BroadcastReceiver {
@@ -106,22 +94,29 @@ public class Publisher {
                         if (intent.hasExtra("restart")) {
                             if (intent.getBooleanExtra("restart", true) && shouldRestart) {
                                 Intent startIntent = new Intent(context, PublisherService.class);
-                                intent.putExtra("interval", intent.getIntExtra("interval", 1000));
+                                intent.putExtra("interval", intent.getIntExtra("interval", DEFAULT_INTERVAL));
                                 intent.putExtra("topic", intent.getStringExtra("topic"));
                                 if (!isLiveServiceRunning(context))
                                     context.startService(startIntent);
                             }
+                        } else if (intent.hasExtra("live_location")) {
+                            if (publishListener != null)
+                                publishListener.publishedLocation((Location) intent.getParcelableExtra("live_location"));
                         }
 
                         break;
                     case BROADCAST_ERROR_ACTION_NAME:
-                        if (intent.hasExtra("mode")) {
-                            if (intent.hasExtra("status")) {
-                                switch ((LiveTrackerError) intent.getSerializableExtra("status")) {
+                        if (intent.hasExtra("status")) {
+                            try {
+                                switch (intent.getStringExtra("status")) {
                                     case CONNECTION_LOST:
-                                        trackerPublishListener.onLiveTrackerDisconnected();
+                                        if (publishListener != null)
+                                            publishListener.onLiveTrackerDisconnected();
                                         break;
                                 }
+                            } catch (Exception e) {
+                                if (publishListener != null)
+                                    publishListener.onLiveTrackerDisconnected();
                             }
                         }
                         break;

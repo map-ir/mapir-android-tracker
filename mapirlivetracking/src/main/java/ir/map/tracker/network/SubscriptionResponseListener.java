@@ -2,7 +2,7 @@ package ir.map.tracker.network;
 
 import ir.map.tracker.network.model.Subscription;
 
-public interface MapirSubscriptionResponseListener {
+public interface SubscriptionResponseListener {
 
     void onSubscribeSuccess(Subscription subscription);
 
