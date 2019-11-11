@@ -17,8 +17,8 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import ir.map.tracker.network.MapirRegistrationResponseListener;
-import ir.map.tracker.network.MapirSubscriptionResponseListener;
+import ir.map.tracker.network.RegistrationResponseListener;
+import ir.map.tracker.network.SubscriptionResponseListener;
 import ir.map.tracker.network.model.Data;
 import ir.map.tracker.network.model.Register;
 import ir.map.tracker.network.model.Subscription;
@@ -26,24 +26,24 @@ import ir.map.tracker.network.model.Subscription;
 import static ir.map.tracker.Constants.SERVER_URL;
 
 class Services {
-    private MapirRegistrationResponseListener registrationResponseListener;
-    private MapirSubscriptionResponseListener subscriptionResponseListener;
+    private RegistrationResponseListener registrationResponseListener;
+    private SubscriptionResponseListener subscriptionResponseListener;
     private String errorMessage = null;
 
-    void registerClient(String xApiKey, String imei, String trackId, MapirRegistrationResponseListener listener) {
+    void publishClient(String apiKey, String imei, String trackId, RegistrationResponseListener listener) {
         errorMessage = null;
         this.registrationResponseListener = listener;
-        new RegisterClient().execute(xApiKey, imei, trackId);
+        new PublishClient().execute(apiKey, imei, trackId);
     }
 
-    void fetchClient(String xApiKey, String imei, String trackId, MapirSubscriptionResponseListener listener) {
+    void subscribeClient(String apiKey, String imei, String trackId, SubscriptionResponseListener listener) {
         errorMessage = null;
         this.subscriptionResponseListener = listener;
-        new FetchClient().execute(xApiKey, imei, trackId);
+        new SubscribeClient().execute(apiKey, imei, trackId);
     }
 
     @SuppressLint("StaticFieldLeak")
-    private class RegisterClient extends AsyncTask<String, String, String> {
+    private class PublishClient extends AsyncTask<String, String, String> {
 
         private HttpURLConnection conn;
 
@@ -128,7 +128,7 @@ class Services {
     }
 
     @SuppressLint("StaticFieldLeak")
-    private class FetchClient extends AsyncTask<String, String, String> {
+    private class SubscribeClient extends AsyncTask<String, String, String> {
 
         private HttpURLConnection conn;
 

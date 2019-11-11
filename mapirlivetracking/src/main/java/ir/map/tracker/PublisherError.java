@@ -1,10 +1,8 @@
 package ir.map.tracker;
 
-public enum LiveTrackerError {
-
+public enum PublisherError {
     LOCATION_PERMISSION,
     TELEPHONY_PERMISSION,
-    ACCESS_TOKEN_NOT_AVAILABLE,
-    CONNECTION_LOST,
+    API_KEY_NOT_AVAILABLE,
     INITIALIZE_ERROR
 }

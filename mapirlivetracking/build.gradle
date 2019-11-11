@@ -1,11 +1,38 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+ext {
+
+    bintrayRepo = "Tracker"
+    bintrayName = "ir.map.tracker"
+
+    publishedGroupId = 'ir.map.tracker'
+    libraryName = 'tracker'
+    artifact = 'tracker'
+
+    libraryDescription = 'Live Tracker'
+
+    siteUrl = 'https://github.com/map-ir/mapir-android-tracker'
+    gitUrl = 'https://github.com/map-ir/mapir-android-tracker.git'
+
+    libraryVersion = '0.0.3-beta6'
+
+    developerId = 'shivehmapco'
+    developerName = 'Ali Khoshraftar'
+    developerEmail = 'shivehmapco@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 28
+        minSdkVersion 14
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
 
@@ -15,10 +42,16 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+//    postprocessing {
+//        removeUnusedCode true
+//        obfuscate false // <--
+//        optimizeCode true
+//    }
 }
 
 protobuf {
@@ -36,7 +69,7 @@ protobuf {
                 remove java
             }
             task.plugins {
-                javalite { }
+                javalite {}
             }
         }
     }
@@ -51,4 +84,9 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     api 'com.google.android.gms:play-services-location:17.0.0'
+}
+
+if (project.rootProject.file('local.properties').exists()) {
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
 }

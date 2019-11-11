@@ -5,9 +5,9 @@ import android.content.Context;
 
 import androidx.annotation.RequiresPermission;
 
-public class Subscriber {
+import static ir.map.tracker.SubscriberError.API_KEY_NOT_AVAILABLE;
 
-    private boolean shouldRestart = true;
+public class Subscriber {
 
     private NativeSubscriber nativeSubscriber;
 
@@ -15,14 +15,16 @@ public class Subscriber {
         nativeSubscriber = new NativeSubscriber(context, xApiKey, trackId, trackerSubscribeListener);
     }
 
-    public static Subscriber getLiveTracker(Context context, String token, String trackId, TrackerEvent.SubscribeListener trackerSubscribeListener) {
-        return new Subscriber(context, token, trackId, trackerSubscribeListener);
+    @RequiresPermission(allOf = {Manifest.permission.READ_PHONE_STATE})
+    public static Subscriber getLiveTracker(Context context, String apiKey, String trackId, TrackerEvent.SubscribeListener trackerSubscribeListener) {
+        if (apiKey == null || apiKey.isEmpty())
+            trackerSubscribeListener.onFailure(API_KEY_NOT_AVAILABLE);
+        return new Subscriber(context, apiKey, trackId, trackerSubscribeListener);
     }
 
     /**
      * Start LiveTracking Engine.
      */
-    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
     public void start() {
         nativeSubscriber.start();
     }
@@ -37,7 +39,7 @@ public class Subscriber {
     /**
      * Return true if LiveTracking is ready to start.
      */
-    public boolean isSubscriberReady() {
-        return nativeSubscriber.isSubscriberReady();
+    public boolean isReady() {
+        return nativeSubscriber.isReady();
     }
 }

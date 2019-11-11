@@ -2,7 +2,7 @@ package ir.map.tracker.network;
 
 import ir.map.tracker.network.model.Register;
 
-public interface MapirRegistrationResponseListener {
+public interface RegistrationResponseListener {
 
     void onRegisterSuccess(Register register);
 
