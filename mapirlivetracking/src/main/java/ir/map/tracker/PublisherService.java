@@ -11,7 +11,6 @@ import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
@@ -20,7 +19,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -28,6 +26,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONArray;
@@ -41,20 +40,23 @@ import tutorial.Dataformat;
 import static ir.map.tracker.Constants.BROADCAST_ERROR_ACTION_NAME;
 import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
 import static ir.map.tracker.Constants.BROKER_SERVER_URL;
-import static ir.map.tracker.LiveTrackerError.CONNECTION_LOST;
+import static ir.map.tracker.Constants.CONNECTION_LOST;
+import static ir.map.tracker.Constants.DEFAULT_INTERVAL;
+import static ir.map.tracker.LocationHelper.getLocationClient;
+import static ir.map.tracker.LocationHelper.getLocationRequest;
 
-public class PublisherService extends Service implements MqttCallback, IMqttActionListener {
+public class PublisherService extends Service implements MqttCallback {
 
     private static final int NOTIFICATION_ID = 1001;
     private LocationRequest locationRequest;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private Location lastLocation;
+    private FusedLocationProviderClient locationClient;
     private MqttAndroidClient mqttClient;
-    private int interval = -1;
+    private int interval = DEFAULT_INTERVAL;
     private String topic;
     private int mqttConnectRetryCount = 0;
     private boolean shouldRestart = true;
     private boolean shouldRunInBackground = false;
+    private MqttConnectOptions mqttOptions = new MqttConnectOptions();
 
     public PublisherService() {
 
@@ -71,10 +73,9 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
             if (locationResult == null) {
                 return;
             }
-            Location location = locationResult.getLocations().get(locationResult.getLocations().size() - 1);
-            if (location != lastLocation) {
-                lastLocation = location;
-                publish(lastLocation);
+            if (mqttClient != null && mqttClient.isConnected()) {
+                Location location = locationResult.getLocations().get(locationResult.getLocations().size() - 1);
+                publish(location);
             }
         }
     };
@@ -82,9 +83,10 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         shouldRestart = intent.getBooleanExtra("restart", true);
-        interval = intent.getIntExtra("interval", 1000);
+        interval = intent.getIntExtra("interval", DEFAULT_INTERVAL);
         topic = intent.getStringExtra("topic");
         shouldRunInBackground = intent.getBooleanExtra("background_running", false);
+        mqttOptions.setAutomaticReconnect(false);
 
         if (shouldRestart) {
             mqttClient = new MqttAndroidClient(getApplicationContext(), BROKER_SERVER_URL, topic);
@@ -97,10 +99,11 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
                     startForeground();
             }
         } else {
+            removeLocationUpdate();
+            disconnectMqtt();
             stopForeground();
             stopSelf();
         }
-
         return START_STICKY;
     }
 
@@ -128,33 +131,11 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
         if (!mqttClient.isConnected()) {
             if (mqttConnectRetryCount < 3) {
                 try {
-//                MqttConnectOptions options = new MqttConnectOptions();
-//                options.setUserName(username);
-//                options.setPassword(password.toCharArray());
-                    mqttClient.connect().setActionCallback(new IMqttActionListener() {
+                    mqttClient.connect(mqttOptions).setActionCallback(new IMqttActionListener() {
                         @Override
                         public void onSuccess(IMqttToken asyncActionToken) {
                             mqttConnectRetryCount = 0;
-
-                            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(PublisherService.this);
-
-                            locationRequest = LocationRequest.create();
-                            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                            locationRequest.setInterval(interval);
-                            locationRequest.setFastestInterval(interval);
-
-                            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                                @Override
-                                public void onSuccess(Location location) {
-                                    if (mqttClient.isConnected()) {
-                                        if (location != null) {
-                                            publish(location);
-                                        }
-                                    }
-                                }
-                            });
-
-                            mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+                            initFusedLocation();
                         }
 
                         @Override
@@ -165,32 +146,39 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
                     });
                 } catch (MqttException e) {
                     mqttConnectRetryCount++;
-                    Log.e("LIVE_TRACKER", e.getMessage());
                     connectMqtt();
                 }
+            } else {
+                Intent intent = new Intent(BROADCAST_ERROR_ACTION_NAME);
+                intent.putExtra("status", CONNECTION_LOST);
+                sendBroadcast(intent);
             }
         }
+    }
+
+    private void initFusedLocation() {
+        locationClient = getLocationClient(PublisherService.this);
+
+        locationRequest = getLocationRequest(interval);
+
+        locationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (mqttClient != null && mqttClient.isConnected()) {
+                    if (location != null) {
+                        publish(location);
+                    }
+                }
+            }
+        });
+
+        locationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-//    @Override
-//    protected void onHandleIntent(@Nullable Intent intent) {
-//        if (intent != null) {
-//            final String action = intent.getAction();
-//            if (ACTION_PROCESS_UPDATES.equals(action)) {
-//                LocationResult locationResult = LocationResult.extractResult(intent);
-//                Location location = locationResult.getLocations().get(locationResult.getLocations().size() - 1);
-//                if (location != lastLocation) {
-//                    lastLocation = location;
-//                    publish(lastLocation);
-//                }
-//            }
-//        }
-//    }
 
     @Override
     public void onDestroy() {
@@ -208,7 +196,8 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     private void disconnectMqtt() {
         if (mqttClient != null) {
             try {
-                mqttClient.disconnect();
+                if (mqttClient.isConnected())
+                    mqttClient.disconnect();
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -216,56 +205,16 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
     }
 
     private void removeLocationUpdate() {
-        if (mFusedLocationClient != null && locationCallback != null) {
-            mFusedLocationClient.removeLocationUpdates(locationCallback);
+        if (locationClient != null && locationCallback != null) {
+            locationClient.removeLocationUpdates(locationCallback);
         }
     }
 
-
-    @Override
-    public void onSuccess(IMqttToken asyncActionToken) {
-        mqttConnectRetryCount = 0;
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(PublisherService.this);
-
-        locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(interval);
-        locationRequest.setFastestInterval(interval);
-
-        mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (mqttClient.isConnected()) {
-                    if (location != null) {
-                        publish(location);
-                    }
-                }
-            }
-        });
-
-        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
-    }
-
-    @Override
-    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-        mqttConnectRetryCount++;
-        connectMqtt();
-    }
 
     @Override
     public void connectionLost(Throwable cause) {
-        if (mqttConnectRetryCount < 3) {
-            mqttConnectRetryCount++;
+        if (shouldRestart)
             connectMqtt();
-        } else {
-            disconnectMqtt();
-            removeLocationUpdate();
-            Intent intent = new Intent(BROADCAST_ERROR_ACTION_NAME);
-            intent.putExtra("mode", "error");
-            intent.putExtra("status", CONNECTION_LOST);
-            sendBroadcast(intent);
-        }
     }
 
     @Override
@@ -297,6 +246,10 @@ public class PublisherService extends Service implements MqttCallback, IMqttActi
                                 .setSpeed(location.getSpeed())
                                 .build()
                                 .toByteArray()));
+
+                Intent intent = new Intent(BROADCAST_INFO_ACTION_NAME);
+                intent.putExtra("live_location", location);
+                sendBroadcast(intent);
 
             } catch (MqttException e) {
                 e.printStackTrace();

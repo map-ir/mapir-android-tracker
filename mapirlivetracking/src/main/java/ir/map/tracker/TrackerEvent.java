@@ -7,12 +7,19 @@ public interface TrackerEvent {
         /**
          * Notify that failed to send location
          */
-        void onFailure(LiveTrackerError error);
+        void onFailure(PublisherError error);
 
         /**
          * Notify that engine is disconnected
          */
         void onLiveTrackerDisconnected();
+
+        /**
+         * Notify Every Location Sent
+         *
+         * @param location
+         */
+        void publishedLocation(Location location);
     }
 
     interface SubscribeListener {
@@ -29,6 +36,6 @@ public interface TrackerEvent {
         /**
          * Notify that failed to fetch
          */
-        void onFailure(LiveTrackerError error);
+        void onFailure(SubscriberError error);
     }
 }
