@@ -1,2 +1,2 @@
-include ':app', ':mapirlivetracking'
+include ':mapirlivetracking', ':subscriber_sample', ':publisher_sample'
 rootProject.name='LiveTrackingSample'
