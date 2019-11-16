@@ -133,7 +133,6 @@ publisher.start(interval); // interval is in miliseconds and should be at least 
 ```
 publisher.stop();
 ```
-‌
 ### Subscriber
 #
 #### 1.Put Following permissions in Manifest file :
