@@ -14,7 +14,10 @@ import static ir.map.tracker.Constants.BROADCAST_ERROR_ACTION_NAME;
 import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
 import static ir.map.tracker.Constants.CONNECTION_LOST;
 import static ir.map.tracker.Constants.DEFAULT_INTERVAL;
-import static ir.map.tracker.ServiceHelper.isLiveServiceRunning;
+import static ir.map.tracker.PublisherError.MISSING_API_KEY;
+import static ir.map.tracker.PublisherError.MISSING_CONTEXT;
+import static ir.map.tracker.PublisherError.MISSING_TRACK_ID;
+import static ir.map.tracker.ServiceUtils.isLiveServiceRunning;
 
 public class Publisher {
 
@@ -36,11 +39,19 @@ public class Publisher {
 
     @RequiresPermission(allOf = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.ACCESS_FINE_LOCATION})
     public static Publisher getLiveTracker(@NonNull Context context, @NonNull String apiKey, @NonNull String trackId, boolean runInBackground, @NonNull TrackerEvent.PublishListener trackerPublishListener) {
-        if (apiKey == null || apiKey.isEmpty())
-            trackerPublishListener.onFailure(PublisherError.API_KEY_NOT_AVAILABLE);
-        else
-            return new Publisher(context, apiKey, trackId, runInBackground, trackerPublishListener);
-        return null;
+        if (context == null) {
+            trackerPublishListener.onFailure(MISSING_CONTEXT);
+            return null;
+        }
+        if (apiKey == null || apiKey.isEmpty()) {
+            trackerPublishListener.onFailure(MISSING_API_KEY);
+            return null;
+        }
+        if (trackId == null || trackId.isEmpty()) {
+            trackerPublishListener.onFailure(MISSING_TRACK_ID);
+            return null;
+        }
+        return new Publisher(context, apiKey, trackId, runInBackground, trackerPublishListener);
     }
 
     /**

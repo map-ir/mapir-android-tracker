@@ -2,6 +2,8 @@ package ir.map.tracker;
 
 public enum SubscriberError {
     TELEPHONY_PERMISSION,
-    API_KEY_NOT_AVAILABLE,
-    INITIALIZE_ERROR
+    MISSING_API_KEY,
+    MISSING_TRACK_ID,
+    MISSING_CONTEXT,
+    INITIALIZE_ERROR,
 }

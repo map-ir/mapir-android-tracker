@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">LiveTrackingSample</string>
-    <string name="api_key">API_KEY</string>
-    <string name="trackId">01</string>
-</resources>

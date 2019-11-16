@@ -25,6 +25,7 @@ import tutorial.Dataformat;
 
 import static ir.map.tracker.Constants.BROKER_SERVER_URL;
 import static ir.map.tracker.SubscriberError.INITIALIZE_ERROR;
+import static ir.map.tracker.SubscriberError.MISSING_API_KEY;
 import static ir.map.tracker.SubscriberError.TELEPHONY_PERMISSION;
 
 class NativeSubscriber implements MqttCallback, SubscriptionResponseListener {
@@ -54,7 +55,8 @@ class NativeSubscriber implements MqttCallback, SubscriptionResponseListener {
             subscribeListener.onFailure(TELEPHONY_PERMISSION);
         } else {
             try {
-                new Services().subscribeClient(xApiKey, ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId(), trackId, this);
+                new Services().subscribeClient(xApiKey, ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId(),
+                        trackId, HeaderUtils.getUserAgent(context) + "-subscriber", this);
             } catch (Exception e) {
                 subscribeListener.onFailure(INITIALIZE_ERROR);
             }
@@ -162,6 +164,15 @@ class NativeSubscriber implements MqttCallback, SubscriptionResponseListener {
     @Override
     public void onSubscribeFailure(Throwable error) {
         isReady = false;
-        subscribeListener.onFailure(INITIALIZE_ERROR);
+        if (error.getMessage() != null) {
+            switch (error.getMessage()) {
+                case "Authorization Failed":
+                    subscribeListener.onFailure(MISSING_API_KEY);
+                    break;
+                case "Failed To Register":
+                    subscribeListener.onFailure(INITIALIZE_ERROR);
+                    break;
+            }
+        }
     }
 }

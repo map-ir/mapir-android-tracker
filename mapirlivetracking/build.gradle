@@ -3,6 +3,10 @@ apply plugin: 'com.google.protobuf'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
+
+def vName = "0.0.3-beta8"
+def vCode = 11
+
 ext {
 
     bintrayRepo = "Tracker"
@@ -17,7 +21,7 @@ ext {
     siteUrl = 'https://github.com/map-ir/mapir-android-tracker'
     gitUrl = 'https://github.com/map-ir/mapir-android-tracker.git'
 
-    libraryVersion = '0.0.3-beta6'
+    libraryVersion = vName
 
     developerId = 'shivehmapco'
     developerName = 'Ali Khoshraftar'
@@ -33,8 +37,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode vCode
+        versionName "${vName}"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -46,12 +50,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-//    postprocessing {
-//        removeUnusedCode true
-//        obfuscate false // <--
-//        optimizeCode true
-//    }
 }
 
 protobuf {
