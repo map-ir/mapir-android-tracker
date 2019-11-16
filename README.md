@@ -53,16 +53,13 @@ implementation 'ir.map.tracker:tracker:$latest_version'
     <uses-permission android:name="android.permission.READ_PHONE_STATE" /> // For read device imei
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> // For making LiveService run in forground if you want use SDK's service
 ```
-‌
 #### 2.Declare LiveService in Manifest (if you want use SDK's LiveService) in application scope :
-
 ```
 <service
             android:name="ir.map.tracker.PublisherService"
             android:enabled="true" />
 ```
 #### 3.Create publisher object and use static method getLiveTracker to initialize object to work with it :
-‌
 ```
 Publisher publisher = Publisher.getLiveTracker(context, API_KEY, track_id, true, new TrackerEvent.PublishListener() {
                 @Override
@@ -107,7 +104,6 @@ Publisher publisher = Publisher.getLiveTracker(context, API_KEY, track_id, true,
             });
             
 ```
-‌
 #### 3.Activity/Fragment Life Cycle methods
 ##### OnResume
 ```
@@ -133,12 +129,10 @@ Publisher publisher = Publisher.getLiveTracker(context, API_KEY, track_id, true,
 ```
 publisher.start(interval); // interval is in miliseconds and should be at least 1000
 ```
-‌
 #### 5.Stop sending location :
 ```
 publisher.stop();
 ```
-‌
 ### Subscriber
 #### 1.Put Following permissions in Manifest file :
 
@@ -193,17 +187,13 @@ Subscriber subscriber = Subscriber.getLiveTracker(context, API_KEY, track_id, ne
 ```
 subscriber.start();
 ```
-‌
 #### 4.Stop receiving location :
 ```
 subscriber.stop();
 ```
-‌
 ## Example
 Clone project and run subscriber_sample or puvlisher_sample modules seperatly
 Put your API_KEY in project whenever it needs
-‌
-‌
 ## Contributing
 Contributions are very welcome 🙌
 
