@@ -37,11 +37,12 @@ import tutorial.Dataformat;
 
 import static ir.map.tracker.Constants.BROKER_SERVER_URL;
 import static ir.map.tracker.Constants.DEFAULT_INTERVAL;
-import static ir.map.tracker.LocationHelper.getLocationClient;
-import static ir.map.tracker.LocationHelper.getLocationRequest;
+import static ir.map.tracker.LocationUtils.getLocationClient;
+import static ir.map.tracker.LocationUtils.getLocationRequest;
 import static ir.map.tracker.PublisherError.INITIALIZE_ERROR;
+import static ir.map.tracker.PublisherError.MISSING_API_KEY;
 import static ir.map.tracker.PublisherError.TELEPHONY_PERMISSION;
-import static ir.map.tracker.ServiceHelper.isLiveServiceRunning;
+import static ir.map.tracker.ServiceUtils.isLiveServiceRunning;
 
 class NativePublisher implements RegistrationResponseListener, MqttCallback {
 
@@ -88,7 +89,8 @@ class NativePublisher implements RegistrationResponseListener, MqttCallback {
             trackerPublishListener.onFailure(TELEPHONY_PERMISSION);
         } else {
             try {
-                new Services().publishClient(apiKey, ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId(), trackId, this);
+                new Services().publishClient(apiKey, ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId(),
+                        trackId, HeaderUtils.getUserAgent(context) + "-publisher", this);
             } catch (Exception e) {
                 trackerPublishListener.onFailure(INITIALIZE_ERROR);
             }
@@ -159,7 +161,17 @@ class NativePublisher implements RegistrationResponseListener, MqttCallback {
 
     @Override
     public void onRegisterFailure(Throwable error) {
-        trackerPublishListener.onFailure(INITIALIZE_ERROR);
+        isReady = false;
+        if (error.getMessage() != null) {
+            switch (error.getMessage()) {
+                case "Authorization Failed":
+                    trackerPublishListener.onFailure(MISSING_API_KEY);
+                    break;
+                case "Failed To Register":
+                    trackerPublishListener.onFailure(INITIALIZE_ERROR);
+                    break;
+            }
+        }
     }
 
     private void publish(Location location) {
@@ -236,7 +248,7 @@ class NativePublisher implements RegistrationResponseListener, MqttCallback {
     }
 
     void stopService() {
-        ServiceHelper.stopService(context);
+        ServiceUtils.stopService(context);
     }
 
     private void disconnectMqtt() {

@@ -19,6 +19,15 @@
 /key/**
 /app/release/**
 /*/build/
+/subscriber_sample/src/main/gen/
+/subscriber_sample/build/**
+/subscriber_sample/release/**
+/subscriber_sample/release/**
+/publisher_sample/src/main/gen/
+/publisher_sample/build/**
+/publisher_sample/release/**
+/publisher_sample/release/**
+/*/build/
 release/
 .idea
 *.css

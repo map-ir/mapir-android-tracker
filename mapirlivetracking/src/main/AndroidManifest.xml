@@ -12,8 +12,8 @@
     <application>
         <receiver android:name="ir.map.tracker.Publisher$LiveBroadcastReceiver">
             <intent-filter>
-                <action android:name="LiveTrackingServiceError" />
-                <action android:name="LiveTrackingServiceInfo" />
+                <action android:name="TrackerServiceError" />
+                <action android:name="TrackerServiceInfo" />
             </intent-filter>
         </receiver>
 

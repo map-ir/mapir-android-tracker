@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_activity_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        tools:context=".MainActivity">
+
+        <ImageView
+            android:id="@+id/play_pause_img"
+            android:layout_width="164dp"
+            android:layout_height="164dp"
+            android:src="@drawable/ic_start"
+            app:layout_constraintBottom_toTopOf="@+id/live_tracking_id_edt"
+            app:layout_constraintEnd_toEndOf="@+id/live_tracking_id_edt"
+            app:layout_constraintStart_toStartOf="@+id/live_tracking_id_edt"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:id="@+id/live_tracking_id_edt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:hint="Default: shiveh_live_tracking_test"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@+id/live_tracking_log_edt"
+            app:layout_constraintEnd_toEndOf="@+id/live_tracking_log_edt"
+            app:layout_constraintStart_toStartOf="@+id/live_tracking_log_edt" />
+
+        <EditText
+            android:id="@+id/live_tracking_log_edt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:inputType="text"
+            android:singleLine="true"
+            android:text="STATUS will log here"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

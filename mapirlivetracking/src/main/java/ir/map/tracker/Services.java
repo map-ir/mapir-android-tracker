@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.HashMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -23,23 +23,24 @@ import ir.map.tracker.network.model.Data;
 import ir.map.tracker.network.model.Register;
 import ir.map.tracker.network.model.Subscription;
 
-import static ir.map.tracker.Constants.SERVER_URL;
+import static ir.map.tracker.HeaderUtils.SDK_API_KEY_KEY;
+import static ir.map.tracker.HeaderUtils.SDK_HEADER_KEY;
 
 class Services {
     private RegistrationResponseListener registrationResponseListener;
     private SubscriptionResponseListener subscriptionResponseListener;
     private String errorMessage = null;
 
-    void publishClient(String apiKey, String imei, String trackId, RegistrationResponseListener listener) {
+    void publishClient(String apiKey, String imei, String trackId, String userAgent, RegistrationResponseListener listener) {
         errorMessage = null;
         this.registrationResponseListener = listener;
-        new PublishClient().execute(apiKey, imei, trackId);
+        new PublishClient().execute(apiKey, imei, trackId, userAgent);
     }
 
-    void subscribeClient(String apiKey, String imei, String trackId, SubscriptionResponseListener listener) {
+    void subscribeClient(String apiKey, String imei, String trackId, String userAgent, SubscriptionResponseListener listener) {
         errorMessage = null;
         this.subscriptionResponseListener = listener;
-        new SubscribeClient().execute(apiKey, imei, trackId);
+        new SubscribeClient().execute(apiKey, imei, trackId, userAgent);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -50,16 +51,11 @@ class Services {
         @Override
         protected String doInBackground(String... args) {
             try {
-                URL url = new URL(SERVER_URL);
-                conn = (HttpURLConnection) url.openConnection();
+                HashMap<String, String> params = new HashMap<>();
+                params.put(SDK_API_KEY_KEY, args[0]);
+                params.put(SDK_HEADER_KEY, args[3]);
 
-                conn.setReadTimeout(5000);
-                conn.setConnectTimeout(10000);
-                conn.setRequestMethod("POST");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("x-api-key", args[0]);
+                conn = NetworkUtils.getHttpConnection(params);
 
                 JSONObject jsonParam = new JSONObject();
                 jsonParam.put("device_id", args[1]);
@@ -67,24 +63,28 @@ class Services {
                 jsonParam.put("type", "publisher");
 
                 OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(os, "UTF-8"));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
                 writer.write(jsonParam.toString());
                 writer.flush();
                 writer.close();
                 os.close();
 
-                int responseCode=conn.getResponseCode();
+                int responseCode = conn.getResponseCode();
                 if (responseCode == HttpsURLConnection.HTTP_CREATED) {
 
-                    BufferedReader in=new BufferedReader( new InputStreamReader(conn.getInputStream()));
-                    StringBuffer sb = new StringBuffer();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
                     String line;
-                    while((line = in.readLine()) != null) {
+                    while ((line = in.readLine()) != null) {
                         sb.append(line);
                         break;
                     }
                     in.close();
                     return sb.toString();
+                } else if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED) {
+                    errorMessage = "Could Not Get Data : Response Code : " + conn.getResponseCode();
+                    registrationResponseListener.onRegisterFailure(new Throwable("Authorization Failed"));
+                    return null;
                 } else {
                     errorMessage = "Could Not Get Data : Response Code : " + conn.getResponseCode();
                     registrationResponseListener.onRegisterFailure(new Throwable("Failed To Register"));
@@ -135,16 +135,11 @@ class Services {
         @Override
         protected String doInBackground(String... args) {
             try {
-                URL url = new URL("https://tracking-dev.map.ir/");
-                conn = (HttpURLConnection) url.openConnection();
+                HashMap<String, String> params = new HashMap<>();
+                params.put(SDK_API_KEY_KEY, args[0]);
+                params.put(SDK_HEADER_KEY, args[3]);
 
-                conn.setReadTimeout(5000);
-                conn.setConnectTimeout(10000);
-                conn.setRequestMethod("POST");
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("x-api-key", args[0]);
+                conn = NetworkUtils.getHttpConnection(params);
 
                 JSONObject jsonParam = new JSONObject();
                 jsonParam.put("device_id", args[1]);
@@ -152,24 +147,28 @@ class Services {
                 jsonParam.put("type", "subscriber");
 
                 OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(os, "UTF-8"));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
                 writer.write(jsonParam.toString());
                 writer.flush();
                 writer.close();
                 os.close();
 
-                int responseCode=conn.getResponseCode();
+                int responseCode = conn.getResponseCode();
                 if (responseCode == HttpsURLConnection.HTTP_CREATED) {
 
-                    BufferedReader in=new BufferedReader( new InputStreamReader(conn.getInputStream()));
-                    StringBuffer sb = new StringBuffer();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
                     String line;
-                    while((line = in.readLine()) != null) {
+                    while ((line = in.readLine()) != null) {
                         sb.append(line);
                         break;
                     }
                     in.close();
                     return sb.toString();
+                } else if (responseCode == HttpsURLConnection.HTTP_UNAUTHORIZED) {
+                    errorMessage = "Could Not Get Data : Response Code : " + conn.getResponseCode();
+                    subscriptionResponseListener.onSubscribeFailure(new Throwable("Authorization Failed"));
+                    return null;
                 } else {
                     errorMessage = "Could Not Get Data : Response Code : " + conn.getResponseCode();
                     subscriptionResponseListener.onSubscribeFailure(new Throwable("Failed To Register"));

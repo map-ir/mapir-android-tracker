@@ -42,8 +42,8 @@ import static ir.map.tracker.Constants.BROADCAST_INFO_ACTION_NAME;
 import static ir.map.tracker.Constants.BROKER_SERVER_URL;
 import static ir.map.tracker.Constants.CONNECTION_LOST;
 import static ir.map.tracker.Constants.DEFAULT_INTERVAL;
-import static ir.map.tracker.LocationHelper.getLocationClient;
-import static ir.map.tracker.LocationHelper.getLocationRequest;
+import static ir.map.tracker.LocationUtils.getLocationClient;
+import static ir.map.tracker.LocationUtils.getLocationRequest;
 
 public class PublisherService extends Service implements MqttCallback {
 

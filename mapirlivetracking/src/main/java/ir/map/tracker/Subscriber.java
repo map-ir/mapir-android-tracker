@@ -5,7 +5,9 @@ import android.content.Context;
 
 import androidx.annotation.RequiresPermission;
 
-import static ir.map.tracker.SubscriberError.API_KEY_NOT_AVAILABLE;
+import static ir.map.tracker.SubscriberError.MISSING_API_KEY;
+import static ir.map.tracker.SubscriberError.MISSING_CONTEXT;
+import static ir.map.tracker.SubscriberError.MISSING_TRACK_ID;
 
 public class Subscriber {
 
@@ -15,10 +17,20 @@ public class Subscriber {
         nativeSubscriber = new NativeSubscriber(context, xApiKey, trackId, trackerSubscribeListener);
     }
 
-    @RequiresPermission(allOf = {Manifest.permission.READ_PHONE_STATE})
+    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
     public static Subscriber getLiveTracker(Context context, String apiKey, String trackId, TrackerEvent.SubscribeListener trackerSubscribeListener) {
-        if (apiKey == null || apiKey.isEmpty())
-            trackerSubscribeListener.onFailure(API_KEY_NOT_AVAILABLE);
+        if (context == null) {
+            trackerSubscribeListener.onFailure(MISSING_CONTEXT);
+            return null;
+        }
+        if (apiKey == null || apiKey.isEmpty()) {
+            trackerSubscribeListener.onFailure(MISSING_API_KEY);
+            return null;
+        }
+        if (trackId == null || trackId.isEmpty()) {
+            trackerSubscribeListener.onFailure(MISSING_TRACK_ID);
+            return null;
+        }
         return new Subscriber(context, apiKey, trackId, trackerSubscribeListener);
     }
 
