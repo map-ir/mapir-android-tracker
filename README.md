@@ -25,10 +25,6 @@
 - Complete and expressive documentation.
 - You can use both Java and Kotlin languages. 
 
-## Example
-
-The example applications are the best way to see `MapirLiveTracker` in action. Simply clone and open app in Android Studio.
-
 ## Prerequisites
 
 Create an account in map.ir then create a project and get your API_KEY :
