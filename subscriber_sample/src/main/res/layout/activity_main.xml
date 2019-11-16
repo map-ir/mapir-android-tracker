@@ -1,9 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:fillViewport="true">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_activity_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        tools:context=".MainActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/mapView_lnl"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_corner_background_map"
+            app:layout_constraintBottom_toTopOf="@+id/live_tracking_id_fedt"
+            app:layout_constraintEnd_toEndOf="@+id/live_tracking_id_fedt"
+            app:layout_constraintStart_toStartOf="@+id/live_tracking_id_fedt"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ir.map.sdk_map.maps.MapView
+                android:id="@+id/mapView_map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/map_cover_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="#fff"
+            app:layout_constraintBottom_toBottomOf="@+id/mapView_lnl"
+            app:layout_constraintEnd_toEndOf="@+id/mapView_lnl"
+            app:layout_constraintStart_toStartOf="@+id/mapView_lnl"
+            app:layout_constraintTop_toTopOf="@+id/mapView_lnl" />
+
+        <ImageView
+            android:id="@+id/play_pause_img"
+            android:layout_width="164dp"
+            android:layout_height="164dp"
+            android:src="@drawable/ic_start"
+            app:layout_constraintBottom_toBottomOf="@+id/mapView_lnl"
+            app:layout_constraintEnd_toEndOf="@+id/live_tracking_id_fedt"
+            app:layout_constraintStart_toStartOf="@+id/live_tracking_id_fedt"
+            app:layout_constraintTop_toTopOf="@+id/mapView_lnl" />
+
+        <EditText
+            android:id="@+id/live_tracking_id_fedt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:hint="Default: shiveh_live_tracking_test"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@+id/live_tracking_log_fedt"
+            app:layout_constraintEnd_toEndOf="@+id/live_tracking_log_fedt"
+            app:layout_constraintStart_toStartOf="@+id/live_tracking_log_fedt" />
+
+        <EditText
+            android:id="@+id/live_tracking_log_fedt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:inputType="text"
+            android:singleLine="true"
+            android:text="STATUS would logged here"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

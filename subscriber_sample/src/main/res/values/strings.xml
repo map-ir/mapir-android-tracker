@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">SubscriberSample</string>
+    <string name="app_name">LiveTrackingSampleSubscriber</string>
+    <string name="api_key">API_KEY</string>
+    <string name="track_id">track_id</string>
 </resources>
